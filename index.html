@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>動体視力トレーニング</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center; /* 横中央 */
+    align-items: center;     /* 縦中央 */
+    background: #f5f5f5;
+    font-family: sans-serif;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column; /* 縦並び */
+    gap: 20px;             /* ボタン間の間隔 */
+  }
+
+  button {
+    padding: 20px 40px;
+    font-size: 24px;
+    cursor: pointer;
+    border: none;
+    border-radius: 0;
+    background-color: #000;
+    color: white;
+    transition: background-color 0.2s;
+  }
+
+  button:hover {
+    background-color: #444;
+  }
+</style>
+</head>
+<body>
+
+<div class="button-container">
+  <button onclick="location.href='number1.html'">高速数字</button>
+  <button onclick="location.href='number2.html'">フラッシュ数字</button>
+</div>
+
+</body>
+</html>
