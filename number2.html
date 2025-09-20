@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ランダム複数数字表示（左上桁数・右上表示数）</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #f5f5f5;
+    cursor: default;
+  }
+
+  /* 数字 */
+  .number {
+    position: absolute;
+    font-size: 144px;
+    font-weight: bold;
+  }
+
+  /* レベル表示 */
+  .level-display {
+    position: absolute;
+    top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    background: rgba(255,255,255,0.7);
+    padding: 5px 10px;
+    border-radius: 8px;
+    z-index: 10;
+    cursor: pointer;
+  }
+
+  .digit-level { left: 10px; }   /* 左上 */
+  .count-level { right: 10px; }   /* 右上 */
+</style>
+</head>
+<body>
+
+<div class="level-display digit-level" id="digitLevel">数字レベル 1</div>
+<div class="level-display count-level" id="countLevel">表示レベル 1</div>
+
+<script>
+  const digitLevelEl = document.getElementById("digitLevel");
+  const countLevelEl = document.getElementById("countLevel");
+
+  const DIGIT_LEVELS = [1, 2, 3, 4, 5]; // 桁数レベル1～5
+  const COUNT_LEVELS = [1, 2, 3, 4, 5]; // 表示数レベル1～5
+  let currentDigitLevel = 0; // 初期桁数レベル1
+  let currentCountLevel = 0; // 初期表示数レベル1
+
+  const DISPLAY_TIME = 200; // 数字表示時間 0.2秒
+  const NEXT_DELAY = 3000;  // 次の表示までの間隔 3秒
+
+  function getRandomNumber(digits) {
+    const min = Math.pow(10, digits - 1);
+    const max = Math.pow(10, digits) - 1;
+    return digits === 1 ? Math.floor(Math.random() * 10) : Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function showNumbers() {
+    const digits = DIGIT_LEVELS[currentDigitLevel];
+    const count = COUNT_LEVELS[currentCountLevel];
+
+    // 前回の数字を削除
+    document.querySelectorAll(".number").forEach(el => el.remove());
+
+    for (let i = 0; i < count; i++) {
+      const numberEl = document.createElement("div");
+      numberEl.className = "number";
+      numberEl.textContent = getRandomNumber(digits);
+      document.body.appendChild(numberEl);
+
+      const numberWidth = numberEl.offsetWidth;
+      const numberHeight = numberEl.offsetHeight;
+
+      const maxX = window.innerWidth - numberWidth;
+      const maxY = window.innerHeight - numberHeight;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      numberEl.style.left = x + "px";
+      numberEl.style.top = y + "px";
+
+      setTimeout(() => {
+        numberEl.remove();
+      }, DISPLAY_TIME);
+    }
+
+    // 次の数字は DISPLAY_TIME + NEXT_DELAY 後
+    setTimeout(showNumbers, DISPLAY_TIME + NEXT_DELAY);
+  }
+
+  // 数字レベル切替（左上クリック）
+  digitLevelEl.addEventListener("click", (event) => {
+    event.stopPropagation();
+    currentDigitLevel = (currentDigitLevel + 1) % DIGIT_LEVELS.length;
+    digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
+  });
+
+  // 表示レベル切替（右上クリック）
+  countLevelEl.addEventListener("click", (event) => {
+    event.stopPropagation();
+    currentCountLevel = (currentCountLevel + 1) % COUNT_LEVELS.length;
+    countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
+  });
+
+  // 初期表示
+  digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
+  countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
+  showNumbers();
+</script>
+
+</body>
+</html>
