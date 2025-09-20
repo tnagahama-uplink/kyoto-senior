@@ -2,172 +2,141 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>動体視力トレーニング1</title>
+<title>数字アニメーション（壁あり）</title>
 <style>
   body {
     margin: 0;
     overflow: hidden;
     background: #f5f5f5;
-    cursor: default; /* 全体は矢印 */
-  }
-
-  /* 壁を含む表示領域 */
-  .container {
+    cursor: default;
     position: relative;
-    width: 100%;
     height: 100vh;
-    overflow: hidden; /* 数字が壁の外に出ると見えなくなる */
-    background: #f5f5f5;
-  }
-
-.wall-left, .wall-right {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background: #333; /* 壁の色を黒に統一 */
-  z-index: 10;
-}
-
-.wall-left { left: 0; }
-.wall-right { right: 0; }
-
-  /* 数字の表示部分（壁なし部分） */
-  .number-container {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    overflow: hidden; /* 壁外の数字を隠す */
   }
 
   .number {
     position: absolute;
-    top: 50%;
     font-size: 144px;
     font-weight: bold;
-    transform: translateY(-50%);
-    will-change: transform;
+    white-space: nowrap;
   }
 
-  /* 速度レベル表示 */
   .level-display {
     position: absolute;
     top: 10px;
-    left: 10px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     background: rgba(255,255,255,0.7);
     padding: 5px 10px;
     border-radius: 8px;
-    z-index: 20;
-    cursor: pointer; /* 速度レベル部分だけ手の形 */
+    z-index: 10;
+    cursor: pointer;
   }
 
-  /* 壁レベル表示 */
-  .wall-level-display {
+  .speed-level { left: 10px; }
+  .wall-level { right: 10px; }
+
+  /* 壁 */
+  .wall {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    font-weight: bold;
-    background: rgba(255,255,255,0.7);
-    padding: 5px 10px;
-    border-radius: 8px;
-    z-index: 20;
-    cursor: pointer; /* 壁レベル部分だけ手の形 */
+    top: 0;
+    height: 100%;
+    background: black;
+    z-index: 5;
+    pointer-events: none;
   }
-
-  @keyframes moveRight {
-    from { transform: translateX(-200px) translateY(-50%); }
-    to   { transform: translateX(var(--end-pos)) translateY(-50%); }
-  }
+  .left-wall { left: 0; }
+  .right-wall { right: 0; }
 </style>
 </head>
 <body>
-  <div class="level-display" id="level">速度レベル 1</div>
-  <div class="wall-level-display" id="wallLevel">壁レベル 1</div>
 
-  <div class="container">
-    <div class="wall-left"></div>
-    <div class="wall-right"></div>
+<div class="level-display speed-level" id="speedLevel">速度レベル 1</div>
+<div class="level-display wall-level" id="wallLevel">壁レベル 1</div>
 
-    <div class="number-container">
-      <div class="number" id="number"></div>
-    </div>
-  </div>
+<div class="wall left-wall" id="leftWall"></div>
+<div class="wall right-wall" id="rightWall"></div>
 
-  <script>
-    const numberEl = document.getElementById("number");
-    const levelEl = document.getElementById("level");
-    const wallLevelEl = document.getElementById("wallLevel");
-    const wallLeft = document.querySelector(".wall-left");
-    const wallRight = document.querySelector(".wall-right");
-    const numberContainer = document.querySelector(".number-container");
+<script>
+  const speedLevelEl = document.getElementById("speedLevel");
+  const wallLevelEl = document.getElementById("wallLevel");
+  const leftWall = document.getElementById("leftWall");
+  const rightWall = document.getElementById("rightWall");
 
-    // 速度レベル設定(px/秒)
-    const SPEEDS = [1000, 1400, 1800, 2200, 2600];
-    let currentSpeedLevel = 0;
+  const SPEEDS = [1000, 1400, 1800, 2200, 2600]; // px/s
+  const WALL_LEVELS = [1200, 1000, 800, 600, 400]; // 表示窓幅
 
-    // 壁レベル設定(px)
-    const WALL_WIDTHS = [1200, 1000, 800, 600, 400];
-    let currentWallLevel = 0;
+  let currentSpeedLevel = 0;
+  let currentWallLevel = 0;
 
-    function getRandomNumber() {
-      return Math.floor(Math.random() * 100000);
+  function getRandomNumber() {
+    return Math.floor(Math.random() * 100);
+  }
+
+  function updateWalls() {
+    const windowWidth = WALL_LEVELS[currentWallLevel];
+    let sideWidth = (window.innerWidth - windowWidth) / 2;
+
+    if (sideWidth < 0) {
+      // 画面が小さい場合は壁をなくす
+      sideWidth = 0;
     }
 
-    function updateWallWidth() {
-      const walllessWidth = WALL_WIDTHS[currentWallLevel];
-      const totalWidth = window.innerWidth;
-      const wallSideWidth = (totalWidth - walllessWidth) / 2;
+    leftWall.style.width = sideWidth + "px";
+    rightWall.style.width = sideWidth + "px";
+  }
 
-      wallLeft.style.width = wallSideWidth + "px";
-      wallRight.style.width = wallSideWidth + "px";
+  function animateNumber() {
+    const numberEl = document.createElement("div");
+    numberEl.className = "number";
+    numberEl.textContent = getRandomNumber();
+    document.body.appendChild(numberEl);
 
-      numberContainer.style.left = wallSideWidth + "px";
-      numberContainer.style.width = walllessWidth + "px";
-    }
+    const numberWidth = numberEl.offsetWidth;
+    const numberHeight = numberEl.offsetHeight;
+    const startY = Math.random() * (window.innerHeight - numberHeight);
 
-    function startAnimation() {
-      const speed = SPEEDS[currentSpeedLevel];
-      levelEl.textContent = `速度レベル ${currentSpeedLevel + 1}`;
-      wallLevelEl.textContent = `壁レベル ${currentWallLevel + 1}`;
+    const speed = SPEEDS[currentSpeedLevel]; // px/s
+    const duration = window.innerWidth / speed * 1000; // ms
 
-      numberEl.textContent = getRandomNumber();
+    numberEl.style.left = -numberWidth + "px";
+    numberEl.style.top = startY + "px";
 
-      const containerWidth = numberContainer.clientWidth;
-      const distance = containerWidth + 200;
-      const duration = distance / speed;
+    numberEl.animate(
+      [
+        { transform: `translateX(0)` },
+        { transform: `translateX(${window.innerWidth + numberWidth}px)` }
+      ],
+      {
+        duration: duration,
+        easing: "linear"
+      }
+    ).onfinish = () => numberEl.remove();
 
-      numberEl.style.setProperty("--end-pos", containerWidth + "px");
+    setTimeout(animateNumber, 3000); // 3秒ごとに新しい数字
+  }
 
-      numberEl.style.animation = "none";
-      numberEl.offsetHeight;
-      numberEl.style.animation = `moveRight ${duration}s linear forwards`;
+  // 速度レベル切替
+  speedLevelEl.addEventListener("click", (event) => {
+    event.stopPropagation();
+    currentSpeedLevel = (currentSpeedLevel + 1) % SPEEDS.length;
+    speedLevelEl.textContent = `速度レベル ${currentSpeedLevel + 1}`;
+  });
 
-      setTimeout(startAnimation, (duration + 3) * 1000);
-    }
+  // 壁レベル切替
+  wallLevelEl.addEventListener("click", (event) => {
+    event.stopPropagation();
+    currentWallLevel = (currentWallLevel + 1) % WALL_LEVELS.length;
+    wallLevelEl.textContent = `壁レベル ${currentWallLevel + 1}`;
+    updateWalls();
+  });
 
-    // 速度レベル切替（左上クリック）
-    levelEl.addEventListener("click", (event) => {
-      event.stopPropagation();
-      currentSpeedLevel = (currentSpeedLevel + 1) % SPEEDS.length;
-      levelEl.textContent = `速度レベル ${currentSpeedLevel + 1}`;
-    });
+  // リサイズ時に壁を更新
+  window.addEventListener("resize", updateWalls);
 
-    // 壁レベル切替（右上クリック）
-    wallLevelEl.addEventListener("click", (event) => {
-      event.stopPropagation();
-      currentWallLevel = (currentWallLevel + 1) % WALL_WIDTHS.length;
-      wallLevelEl.textContent = `壁レベル ${currentWallLevel + 1}`;
-      updateWallWidth(); // 幅更新
-    });
+  // 初期化
+  updateWalls();
+  animateNumber();
+</script>
 
-    // 初期設定
-    updateWallWidth();
-    startAnimation();
-
-    // ウィンドウリサイズ時に壁幅を再計算
-    window.addEventListener("resize", updateWallWidth);
-  </script>
 </body>
 </html>
