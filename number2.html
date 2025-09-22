@@ -14,8 +14,8 @@
   /* 数字 */
   .number {
     position: absolute;
-    font-size: 144px;
     font-weight: bold;
+    white-space: nowrap;
   }
 
   /* レベル表示 */
@@ -32,7 +32,7 @@
   }
 
   .digit-level { left: 10px; }   /* 左上 */
-  .count-level { right: 10px; }   /* 右上 */
+  .count-level { right: 10px; }  /* 右上 */
 </style>
 </head>
 <body>
@@ -44,14 +44,15 @@
   const digitLevelEl = document.getElementById("digitLevel");
   const countLevelEl = document.getElementById("countLevel");
 
-  const DIGIT_LEVELS = [1, 2, 3, 4, 5];
-  const COUNT_LEVELS = [1, 2, 3, 4, 5];
-  let currentDigitLevel = 0;
-  let currentCountLevel = 0;
+  const DIGIT_LEVELS = [1, 2, 3, 4, 5]; // 桁数レベル
+  const COUNT_LEVELS = [1, 2, 3, 4, 5]; // 表示数レベル
+  let currentDigitLevel = 0; // 初期桁数レベル1
+  let currentCountLevel = 0; // 初期表示数レベル1
 
-  const DISPLAY_TIME = 150;
-  const NEXT_DELAY = 3000;
+  const DISPLAY_TIME = 150; // 数字表示時間 0.15秒
+  const NEXT_DELAY = 3000;  // 次の表示までの間隔 3秒
 
+  // ランダムな数値を生成
   function getRandomNumber(digits) {
     const min = Math.pow(10, digits - 1);
     const max = Math.pow(10, digits) - 1;
@@ -60,11 +61,18 @@
       : Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // 2つの矩形が重なっているかどうか判定
+  // 画面に合わせたフォントサイズを計算
+  function getFontSize(digits) {
+    const base = window.innerWidth * 0.8;  // 画面幅の8割を基準
+    const sizePerChar = base / digits;
+    return Math.min(sizePerChar, window.innerHeight * 0.2); // 高さ20%を上限
+  }
+
+  // 2つの矩形が重なるかどうか
   function isOverlap(a, b) {
-    return !(a.x + a.w < b.x || 
-             b.x + b.w < a.x || 
-             a.y + a.h < b.y || 
+    return !(a.x + a.w < b.x ||
+             b.x + b.w < a.x ||
+             a.y + a.h < b.y ||
              b.y + b.h < a.y);
   }
 
@@ -72,14 +80,17 @@
     const digits = DIGIT_LEVELS[currentDigitLevel];
     const count = COUNT_LEVELS[currentCountLevel];
 
+    // 前回の数字を削除
     document.querySelectorAll(".number").forEach(el => el.remove());
 
     const placed = []; // 配置済みの矩形リスト
+    const fontSize = getFontSize(digits);
 
     for (let i = 0; i < count; i++) {
       const numberEl = document.createElement("div");
       numberEl.className = "number";
       numberEl.textContent = getRandomNumber(digits);
+      numberEl.style.fontSize = fontSize + "px";
       document.body.appendChild(numberEl);
 
       const numberWidth = numberEl.offsetWidth;
@@ -110,21 +121,29 @@
     setTimeout(showNumbers, DISPLAY_TIME + NEXT_DELAY);
   }
 
+  // 数字レベル切替（左上クリック）
   digitLevelEl.addEventListener("click", (event) => {
     event.stopPropagation();
     currentDigitLevel = (currentDigitLevel + 1) % DIGIT_LEVELS.length;
     digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
   });
 
+  // 表示レベル切替（右上クリック）
   countLevelEl.addEventListener("click", (event) => {
     event.stopPropagation();
     currentCountLevel = (currentCountLevel + 1) % COUNT_LEVELS.length;
     countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
   });
 
+  // 初期表示
   digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
   countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
   showNumbers();
+
+  // ウィンドウサイズ変更時にリサイズ対応
+  window.addEventListener("resize", () => {
+    // 次回表示でサイズが更新される
+  });
 </script>
 
 </body>
