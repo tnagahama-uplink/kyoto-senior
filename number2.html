@@ -63,9 +63,17 @@
 
   // 画面に合わせたフォントサイズを計算
   function getFontSize(digits) {
-    const base = window.innerWidth * 0.8;  // 画面幅の8割を基準
-    const sizePerChar = base / digits;
-    return Math.min(sizePerChar, window.innerHeight * 0.2); // 高さ20%を上限
+    // 画面幅の 80% を基準
+    const base = window.innerWidth * 0.8;
+
+    // 今の桁数に応じた計算値
+    const size = base / digits;
+
+    // 5桁のときのサイズを上限とする
+    const maxSize = base / 5;
+
+    // 高さの20%も上限として適用
+    return Math.min(size, maxSize, window.innerHeight * 0.2);
   }
 
   // 2つの矩形が重なるかどうか
