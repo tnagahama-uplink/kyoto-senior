@@ -44,26 +44,37 @@
   const digitLevelEl = document.getElementById("digitLevel");
   const countLevelEl = document.getElementById("countLevel");
 
-  const DIGIT_LEVELS = [1, 2, 3, 4, 5]; // 桁数レベル1～5
-  const COUNT_LEVELS = [1, 2, 3, 4, 5]; // 表示数レベル1～5
-  let currentDigitLevel = 0; // 初期桁数レベル1
-  let currentCountLevel = 0; // 初期表示数レベル1
+  const DIGIT_LEVELS = [1, 2, 3, 4, 5];
+  const COUNT_LEVELS = [1, 2, 3, 4, 5];
+  let currentDigitLevel = 0;
+  let currentCountLevel = 0;
 
-  const DISPLAY_TIME = 150; // 数字表示時間 0.2秒
-  const NEXT_DELAY = 3000;  // 次の表示までの間隔 3秒
+  const DISPLAY_TIME = 150;
+  const NEXT_DELAY = 3000;
 
   function getRandomNumber(digits) {
     const min = Math.pow(10, digits - 1);
     const max = Math.pow(10, digits) - 1;
-    return digits === 1 ? Math.floor(Math.random() * 10) : Math.floor(Math.random() * (max - min + 1)) + min;
+    return digits === 1
+      ? Math.floor(Math.random() * 10)
+      : Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // 2つの矩形が重なっているかどうか判定
+  function isOverlap(a, b) {
+    return !(a.x + a.w < b.x || 
+             b.x + b.w < a.x || 
+             a.y + a.h < b.y || 
+             b.y + b.h < a.y);
   }
 
   function showNumbers() {
     const digits = DIGIT_LEVELS[currentDigitLevel];
     const count = COUNT_LEVELS[currentCountLevel];
 
-    // 前回の数字を削除
     document.querySelectorAll(".number").forEach(el => el.remove());
+
+    const placed = []; // 配置済みの矩形リスト
 
     for (let i = 0; i < count; i++) {
       const numberEl = document.createElement("div");
@@ -73,39 +84,44 @@
 
       const numberWidth = numberEl.offsetWidth;
       const numberHeight = numberEl.offsetHeight;
-
       const maxX = window.innerWidth - numberWidth;
       const maxY = window.innerHeight - numberHeight;
-      const x = Math.random() * maxX;
-      const y = Math.random() * maxY;
+
+      let x, y, rect, tries = 0;
+      const MAX_TRIES = 100; // 無限ループ防止
+
+      do {
+        x = Math.random() * maxX;
+        y = Math.random() * maxY;
+        rect = { x, y, w: numberWidth, h: numberHeight };
+        tries++;
+      } while (placed.some(p => isOverlap(p, rect)) && tries < MAX_TRIES);
 
       numberEl.style.left = x + "px";
       numberEl.style.top = y + "px";
+
+      placed.push(rect);
 
       setTimeout(() => {
         numberEl.remove();
       }, DISPLAY_TIME);
     }
 
-    // 次の数字は DISPLAY_TIME + NEXT_DELAY 後
     setTimeout(showNumbers, DISPLAY_TIME + NEXT_DELAY);
   }
 
-  // 数字レベル切替（左上クリック）
   digitLevelEl.addEventListener("click", (event) => {
     event.stopPropagation();
     currentDigitLevel = (currentDigitLevel + 1) % DIGIT_LEVELS.length;
     digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
   });
 
-  // 表示レベル切替（右上クリック）
   countLevelEl.addEventListener("click", (event) => {
     event.stopPropagation();
     currentCountLevel = (currentCountLevel + 1) % COUNT_LEVELS.length;
     countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
   });
 
-  // 初期表示
   digitLevelEl.textContent = `数字レベル ${currentDigitLevel + 1}`;
   countLevelEl.textContent = `表示レベル ${currentCountLevel + 1}`;
   showNumbers();
